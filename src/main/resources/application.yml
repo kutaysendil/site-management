@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/management
+    username: postgres
+    password: password123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update    # veritaban? ?emas?n? otomatik günceller
+    show-sql: true        # SQL sorgular?n? console'da gösterir
+    properties:
+      hibernate:
+        format_sql: true  # SQL sorgular?n? formatlar
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8080             # uygulaman?n çal??aca?? port
+
+# Logging ayarlar? (opsiyonel)
+logging:
+  level:
+    org.springframework: INFO
+    org.hibernate: INFO
