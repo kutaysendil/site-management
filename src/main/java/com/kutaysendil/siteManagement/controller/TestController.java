@@ -18,8 +18,7 @@ public class TestController {
     @GetMapping
     public ResponseEntity<String> healthCheck() {
         try {
-            // Veritabanı bağlantısını kontrol et
-            jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+             jdbcTemplate.queryForObject("SELECT 1", Integer.class);
             return ResponseEntity.ok("yes");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("no");
