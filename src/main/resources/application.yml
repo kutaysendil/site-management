@@ -15,22 +15,62 @@ spring:
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
-
 server:
   port: 8080
   servlet:
     encoding:
-      charset: utf-8
+      charset: UTF-8
       enabled: true
       force: true
 
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-  expiration: 86400000
+  expiration: 86400000 # 24 saat
   refresh-token:
-    expiration: 604800000
+    expiration: 604800000 # 7 gün
 
 logging:
   level:
     org.springframework: INFO
     org.hibernate: INFO
+  file:
+    name: ${user.dir}/logs/application.log
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      base-path: /api/actuator
+  endpoint:
+    health:
+      show-components: always
+      show-details: always
+      group:
+        system:
+          include: diskSpace,db
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+
+info:
+  app:
+    name: Site Management System
+    description: Apartment Complex Management System
+    version: 1.0.0
+    java:
+      version: ${java.version}

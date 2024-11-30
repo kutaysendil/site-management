@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOGS" value="${user.dir}/logs"/>
+
+    <!-- Console Appender -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Request Log File Appender -->
+    <appender name="RequestFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS}/request.log</file>
+        <encoder>
+            <pattern>%d{ISO8601} [%X{requestId}] [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOGS}/archived/request-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- each file should be at most 10MB -->
+            <maxFileSize>10MB</maxFileSize>
+            <!-- keep 30 days worth of history -->
+            <maxHistory>30</maxHistory>
+            <!-- total size of all archive files, if total size > 20GB, it will delete old archived file -->
+            <totalSizeCap>20GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Logger for requests -->
+    <logger name="com.kutaysendil.siteManagement.filter.RequestLoggingFilter" level="INFO">
+        <appender-ref ref="RequestFile"/>
+    </logger>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="Console"/>
+    </root>
+</configuration>
