@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +19,7 @@ public class TestController {
     @GetMapping
     public ResponseEntity<String> healthCheck() {
         try {
-             jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+            jdbcTemplate.queryForObject("SELECT 1", Integer.class);
             return ResponseEntity.ok("yes");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("no");
@@ -26,9 +27,9 @@ public class TestController {
     }
 
     @GetMapping("/db")
+    @PreAuthorize("hasAuthority('ADMIN_ACCESS')")
     public ResponseEntity<String> dbCheck() {
         try {
-            // Daha detaylı DB kontrolü
             String result = jdbcTemplate.queryForObject(
                     "SELECT current_database()", String.class);
             return ResponseEntity.ok("Database: " + result);
@@ -37,4 +38,6 @@ public class TestController {
                     .body("Database connection failed: " + e.getMessage());
         }
     }
+
+
 }

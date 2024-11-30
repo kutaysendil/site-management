@@ -1,6 +1,5 @@
 package com.kutaysendil.siteManagement.dto.request;
 
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -11,9 +10,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class UserRequest {
+@NoArgsConstructor
+public class RegisterRequest {
     @NotBlank(message = "Mail gerekli")
     @Email(message = "Geçersiz mail formatı")
     private String email;
@@ -25,7 +24,7 @@ public class UserRequest {
     @NotBlank(message = "Ad gerekli")
     private String name;
 
-    @NotBlank(message = "Soyad gerekli")
+    @NotBlank(message = "Soyadı gerekli")
     private String surname;
 
     @NotBlank(message = "Arsa numarası gerekli")

@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -27,10 +28,8 @@ public class User extends BaseAuditableEntity {
     @Column(nullable = false)
     private String surname;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_claims",
-            joinColumns = @JoinColumn(name = "user_id"))
-    private Set<String> claims = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserClaim> userClaims = new HashSet<>();
 
     @Column(name = "apartment_number")
     private String apartmentNumber;
@@ -39,4 +38,12 @@ public class User extends BaseAuditableEntity {
     private String phoneNumber;
 
     private boolean active = true;
+
+    // Helper method to get claim names
+    @Transient
+    public Set<String> getClaimNames() {
+        return userClaims.stream()
+                .map(uc -> uc.getClaim().getName())
+                .collect(Collectors.toSet());
+    }
 }
