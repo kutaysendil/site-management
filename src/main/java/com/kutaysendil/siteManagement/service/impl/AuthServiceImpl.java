@@ -104,7 +104,11 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .refreshToken(refreshToken)
+                .name(user.getName())
+                .surname(user.getSurname())
+                .apartmentNumber(user.getApartmentNumber())
+                .phoneNumber(user.getPhoneNumber())
+                .email(user.getEmail())
                 .claims(new ArrayList<>(user.getClaimNames()))
                 .build();
     }

@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@RequiresClaim("ADMIN_ACCESS")
+@RequiresClaim("ROLE_USER")
 public @interface AdminRequired {
 }
