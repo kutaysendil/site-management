@@ -27,9 +27,6 @@ public class User extends BaseAuditableEntity {
     @Column(nullable = false)
     private String surname;
 
-    @Column(name = "apartment_number")
-    private String apartmentNumber;
-
     @Column(name = "phone_number")
     private String phoneNumber;
 
