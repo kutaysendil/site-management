@@ -11,8 +11,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PropertyRepository extends JpaRepository<PropertyRepository, Long> {
+public interface PropertyRepository extends JpaRepository<Property, Long> {
     Property save(Property property);
+
+    Optional<Property> findById(Long id);
 
     Page<Property> findByDeleted(boolean deleted, Pageable pageable);
 

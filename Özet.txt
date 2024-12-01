@@ -1,0 +1,62 @@
+Property (Mülk) Yönetimi:
+
+- POST /api/v1/properties: Yeni daire/mülk ekleme
+- GET /api/v1/properties: Tüm daireleri listeleme (sayfalı)
+- GET /api/v1/properties/{id}: Belirli bir daireyi görüntüleme
+- PUT /api/v1/properties/{id}: Daire bilgilerini güncelleme
+- DELETE /api/v1/properties/{id}: Daireyi silme (soft delete)
+Bu modül site yönetiminin temelini oluşturuyor. Her dairenin blok, numara, alan bilgileri, sahip ve kiracı bilgileri tutuluyor.
+
+Bill (Fatura) Yönetimi:
+
+- POST /api/v1/bills: Yeni fatura oluşturma
+- GET /api/v1/bills: Tüm faturaları listeleme
+- GET /api/v1/bills/{id}: Belirli bir faturayı görüntüleme
+- PUT /api/v1/bills/{id}: Fatura bilgilerini güncelleme
+- POST /api/v1/bills/{billId}/details: Fatura detayı ekleme
+- GET /api/v1/bills/{billId}/details: Fatura detaylarını görüntüleme
+Fatura sisteminde iki seviye var:
+
+Ana fatura: Toplam tutar, tüketim ve birim fiyat bilgileri
+Fatura detayları: Her dairenin tüketimi ve ödemesi gereken tutar
+
+
+UtilityMeter (Sayaç) Yönetimi:
+
+- POST /api/v1/utility-meters: Yeni sayaç ekleme
+- GET /api/v1/utility-meters: Tüm sayaçları listeleme
+- GET /api/v1/utility-meters/property/{propertyId}: Bir daireye ait sayaçları görme
+- PUT /api/v1/utility-meters/{id}/reading: Sayaç okuma değeri güncelleme
+Her dairenin su, elektrik gibi sayaçları takip ediliyor.
+Örnek İş Akışı:
+
+Önce daireler sisteme eklenir
+Her daireye sayaçları tanımlanır
+Fatura geldiğinde:
+
+Ana fatura bilgileri girilir (örn: 1000000TL toplam, 3000m³ tüketim)
+Her daire için tüketim miktarı girilir
+Sistem otomatik olarak daire başına düşen tutarı hesaplar
+Ödemeler takip edilir
+
+
+
+Güvenlik:
+
+Her endpoint yetki kontrolüne tabi (PROPERTY_CREATE, BILL_READ gibi)
+Soft delete ile veriler silinmiyor, sadece inactive yapılıyor
+Validasyonlar hem DTO hem entity seviyesinde yapılıyor
+
+Veri İlişkileri:
+
+Property <-> User: Many-to-One (bir dairenin bir sahibi/kiracısı olabilir)
+Property <-> UtilityMeter: One-to-Many (bir dairenin birden çok sayacı olabilir)
+Bill <-> BillDetail: One-to-Many (bir faturanın birden çok detayı olabilir)
+BillDetail <-> Property: Many-to-One (her detay bir daireye ait)
+
+İş Kuralları:
+
+Aynı daireye aynı tipte birden fazla sayaç eklenemez
+Sayaç okuması önceki değerden küçük olamaz
+Fatura detaylarında tüketim miktarı girildikten sonra tutar otomatik hesaplanır
+Birim fiyat değiştiğinde tüm detayların tutarları güncellenir
