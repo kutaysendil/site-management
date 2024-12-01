@@ -14,18 +14,18 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ErrorResponse {
-    private String hataKodu;
-    private String mesaj;
-    private String zaman;
-    private String url;
+    private String code;
+    private String message;
+    private String timestamp;
+    private String path;
     private List<ValidationError> hatalar;
 
     public static ErrorResponse of(String code, String message, String path) {
         return ErrorResponse.builder()
-                .hataKodu(code)
-                .mesaj(message)
-                .zaman(DateUtils.nowTurkeyAsString())
-                .url(path)
+                .code(code)
+                .message(message)
+                .timestamp(DateUtils.nowTurkeyAsString())
+                .path(path)
                 .build();
     }
 

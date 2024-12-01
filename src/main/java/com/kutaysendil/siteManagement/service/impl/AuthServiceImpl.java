@@ -4,14 +4,15 @@ package com.kutaysendil.siteManagement.service.impl;
 import com.kutaysendil.siteManagement.dto.request.LoginRequest;
 import com.kutaysendil.siteManagement.dto.request.RegisterRequest;
 import com.kutaysendil.siteManagement.dto.response.AuthResponse;
-import com.kutaysendil.siteManagement.entity.Claim;
+import com.kutaysendil.siteManagement.entity.Role;
 import com.kutaysendil.siteManagement.entity.User;
-import com.kutaysendil.siteManagement.entity.UserClaim;
+import com.kutaysendil.siteManagement.entity.UserRole;
 import com.kutaysendil.siteManagement.exception.auth.EmailAlreadyExistsException;
 import com.kutaysendil.siteManagement.exception.auth.InvalidTokenException;
 import com.kutaysendil.siteManagement.exception.user.UserNotFoundException;
-import com.kutaysendil.siteManagement.repository.ClaimRepository;
+import com.kutaysendil.siteManagement.repository.RoleRepository;
 import com.kutaysendil.siteManagement.repository.UserRepository;
+import com.kutaysendil.siteManagement.repository.UserRoleRepository;
 import com.kutaysendil.siteManagement.security.CustomUserDetails;
 import com.kutaysendil.siteManagement.security.JwtService;
 import com.kutaysendil.siteManagement.service.AuthService;
@@ -22,9 +23,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +33,8 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final ClaimRepository claimRepository;
+    private final RoleRepository roleRepository;
+    private final UserRoleRepository userRoleRepository;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -50,38 +50,29 @@ public class AuthServiceImpl implements AuthService {
                 .surname(request.getSurname())
                 .apartmentNumber(request.getApartmentNumber())
                 .phoneNumber(request.getPhoneNumber())
-                .userClaims(new HashSet<>()) // boş set ile başlat
                 .active(true)
+                .roles(new HashSet<>()) // Boş set ile başlat
                 .build();
 
         var savedUser = userRepository.save(user);
 
-        // Varsayılan ROLE_USER claim'ini ekle
-        Claim defaultClaim = claimRepository.findByName("ROLE_USER")
-                .orElseGet(() -> claimRepository.save(Claim.builder()
-                        .name("ROLE_USER")
-                        .description("Default user role")
-                        .active(true)
-                        .build()));
+        // Varsayılan USER rolünü ekle
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Varsayılan rol bulunamadı"));
 
-        UserClaim userClaim = UserClaim.builder()
+        UserRole userRoleEntity = UserRole.builder()
                 .user(savedUser)
-                .claim(defaultClaim)
+                .role(userRole)
                 .build();
 
-        savedUser.getUserClaims().add(userClaim);
+        savedUser.getRoles().add(userRoleEntity); // User'a rolü ekle
         savedUser = userRepository.save(savedUser);
 
         var userDetails = new CustomUserDetails(savedUser);
-
         var accessToken = jwtService.generateToken(userDetails);
         var refreshToken = jwtService.generateRefreshToken(userDetails);
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .claims(new ArrayList<>(savedUser.getClaimNames()))
-                .build();
+        return buildAuthResponse(savedUser, accessToken, refreshToken);
     }
 
     @Override
@@ -97,20 +88,10 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı"));
 
         var userDetails = new CustomUserDetails(user);
-
         var accessToken = jwtService.generateToken(userDetails);
         var refreshToken = jwtService.generateRefreshToken(userDetails);
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .name(user.getName())
-                .surname(user.getSurname())
-                .apartmentNumber(user.getApartmentNumber())
-                .phoneNumber(user.getPhoneNumber())
-                .email(user.getEmail())
-                .claims(new ArrayList<>(user.getClaimNames()))
-                .build();
+        return buildAuthResponse(user, accessToken, refreshToken);
     }
 
     @Override
@@ -124,14 +105,25 @@ public class AuthServiceImpl implements AuthService {
 
             if (jwtService.isTokenValid(refreshToken, userDetails)) {
                 var accessToken = jwtService.generateToken(userDetails);
-
-                return AuthResponse.builder()
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                        .claims(new ArrayList<>(user.getClaimNames()))
-                        .build();
+                return buildAuthResponse(user, accessToken, refreshToken);
             }
         }
         throw new InvalidTokenException("Geçersiz token");
+    }
+
+    private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken) {
+        var userDetails = new CustomUserDetails(user);
+
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .email(user.getEmail())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .apartmentNumber(user.getApartmentNumber())
+                .phoneNumber(user.getPhoneNumber())
+                .roles(userDetails.getRoles())           // Rolleri ekle
+                .permissions(userDetails.getPermissions()) // Permission'ları ekle
+                .build();
     }
 }

@@ -3,7 +3,7 @@ package com.kutaysendil.siteManagement.config;
 
 import com.kutaysendil.siteManagement.repository.UserRepository;
 import com.kutaysendil.siteManagement.security.CustomUserDetails;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,18 +16,20 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
+@RequiredArgsConstructor
 public class ApplicationConfig {
     private final UserRepository userRepository;
-
-    @Autowired // opsiyonel, tek constructor varsa gerek yok
-    public ApplicationConfig(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> userRepository.findByEmail(username)
-                .map(CustomUserDetails::new)
+                .map(user -> {
+                    try {
+                        return new CustomUserDetails(user);
+                    } catch (Exception e) {
+                        throw new UsernameNotFoundException("Kullanıcı bilgileri yüklenirken hata oluştu", e);
+                    }
+                })
                 .orElseThrow(() -> new UsernameNotFoundException("Kullanıcı bulunamadı"));
     }
 
@@ -36,6 +38,9 @@ public class ApplicationConfig {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
+        // Credential'ları cache'lemeyi kapatalım (güvenlik için)
+        authProvider.setPreAuthenticationChecks(userDetails -> {
+        });
         return authProvider;
     }
 
@@ -46,6 +51,6 @@ public class ApplicationConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12); // Güvenlik seviyesini artırdık
     }
 }

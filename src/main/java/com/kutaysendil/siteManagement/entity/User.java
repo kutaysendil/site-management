@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -28,9 +27,6 @@ public class User extends BaseAuditableEntity {
     @Column(nullable = false)
     private String surname;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UserClaim> userClaims = new HashSet<>();
-
     @Column(name = "apartment_number")
     private String apartmentNumber;
 
@@ -39,11 +35,7 @@ public class User extends BaseAuditableEntity {
 
     private boolean active = true;
 
-    // Helper method to get claim names
-    @Transient
-    public Set<String> getClaimNames() {
-        return userClaims.stream()
-                .map(uc -> uc.getClaim().getName())
-                .collect(Collectors.toSet());
-    }
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @Builder.Default // Bu önemli, Builder kullanırken default değer için
+    private Set<UserRole> roles = new HashSet<>(); // Null yerine boş set
 }

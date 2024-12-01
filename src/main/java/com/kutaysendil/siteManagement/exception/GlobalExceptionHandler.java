@@ -32,10 +32,10 @@ public class GlobalExceptionHandler {
             List<ErrorResponse.ValidationError> errors) {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .hataKodu(code)
-                .mesaj(message)
-                .zaman(DateUtils.nowTurkeyAsString())
-                .url(path)
+                .code(code)
+                .message(message)
+                .timestamp(DateUtils.nowTurkeyAsString())
+                .path(path)
                 .hatalar(errors)
                 .build();
 
@@ -110,6 +110,20 @@ public class GlobalExceptionHandler {
                 "Beklenmedik bir hata oluştu",
                 getPath(request),
                 HttpStatus.INTERNAL_SERVER_ERROR,
+                null
+        );
+    }
+
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(
+            org.springframework.security.authentication.BadCredentialsException ex,
+            WebRequest request) {
+        log.error("Bad credentials exception occurred: ", ex);
+        return createErrorResponse(
+                "AUTH_005",
+                "Email veya şifre hatalı",
+                getPath(request),
+                HttpStatus.UNAUTHORIZED,
                 null
         );
     }

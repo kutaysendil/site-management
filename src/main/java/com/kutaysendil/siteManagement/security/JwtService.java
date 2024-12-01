@@ -1,6 +1,7 @@
 package com.kutaysendil.siteManagement.security;
 
 
+import com.kutaysendil.siteManagement.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -51,7 +52,26 @@ public class JwtService {
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
         if (userDetails instanceof CustomUserDetails) {
-            extraClaims.put("claims", ((CustomUserDetails) userDetails).getUser().getClaimNames());
+            CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
+
+            // Roller ve Permission'ları ayrı ayrı ekle
+            Set<String> roles = customUserDetails.getRoles();
+            Set<String> permissions = customUserDetails.getPermissions();
+
+            extraClaims.put("roles", roles);
+            extraClaims.put("permissions", permissions);
+
+            // Kullanıcı bilgilerini ekle
+            User user = customUserDetails.getUser();
+            extraClaims.put("userId", user.getId());
+            extraClaims.put("name", user.getName());
+            extraClaims.put("surname", user.getSurname());
+
+            // Authority'leri claims olarak ekle (geriye dönük uyumluluk için)
+            List<String> authorities = userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+            extraClaims.put("claims", authorities);
         }
         return generateToken(extraClaims, userDetails);
     }
@@ -65,14 +85,6 @@ public class JwtService {
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
-        // Kullanıcının yetkileri/claim'lerini al
-        Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
-        List<String> claims = authorities.stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
-        extraClaims.put("claims", claims);
-
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
@@ -114,5 +126,19 @@ public class JwtService {
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    // Permission kontrolü için yeni metod
+    public boolean hasPermission(String token, String permission) {
+        Claims claims = extractAllClaims(token);
+        List<String> permissions = claims.get("permissions", List.class);
+        return permissions != null && permissions.contains(permission);
+    }
+
+    // Role kontrolü için yeni metod
+    public boolean hasRole(String token, String roleName) {
+        Claims claims = extractAllClaims(token);
+        List<String> roles = claims.get("roles", List.class);
+        return roles != null && roles.contains(roleName);
     }
 }
