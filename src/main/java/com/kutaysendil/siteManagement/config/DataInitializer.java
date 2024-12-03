@@ -23,44 +23,63 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        // Eğer roller yoksa oluştur
         if (roleRepository.count() == 0) {
             initializeRoles();
         }
     }
 
     private void initializeRoles() {
-        // Temel permission'ları oluştur
-        Permission viewProfile = createPermission("VIEW_PROFILE", "Profil görüntüleme yetkisi");
-        Permission editProfile = createPermission("EDIT_PROFILE", "Profil düzenleme yetkisi");
-        Permission viewInvoice = createPermission("VIEW_INVOICE", "Fatura görüntüleme yetkisi");
-        Permission payInvoice = createPermission("PAY_INVOICE", "Fatura ödeme yetkisi");
-        Permission openDoor = createPermission("OPEN_DOOR", "Kapı açma yetkisi");
+        // AUTH permissions
+        Permission registerUser = createPermission("REGISTER_USER", "Kullanıcı kaydı yapma yetkisi");
+        Permission loginUser = createPermission("LOGIN_USER", "Kullanıcı girişi yapma yetkisi");
 
-        // Admin permission'ları
-        Permission manageUsers = createPermission("MANAGE_USERS", "Kullanıcı yönetimi yetkisi");
-        Permission manageRoles = createPermission("MANAGE_ROLES", "Rol yönetimi yetkisi");
-        Permission manageInvoices = createPermission("MANAGE_INVOICES", "Fatura yönetimi yetkisi");
+        // PROPERTY permissions
+        Permission propertyCreate = createPermission("PROPERTY_CREATE", "Mülk oluşturma yetkisi");
+        Permission propertyRead = createPermission("PROPERTY_READ", "Mülk okuma yetkisi");
+        Permission propertyUpdate = createPermission("PROPERTY_UPDATE", "Mülk güncelleme yetkisi");
+        Permission propertyDelete = createPermission("PROPERTY_DELETE", "Mülk silme yetkisi");
 
-        // USER rolü
+        // BILL permissions
+        Permission billCreate = createPermission("BILL_CREATE", "Fatura oluşturma yetkisi");
+        Permission billRead = createPermission("BILL_READ", "Fatura okuma yetkisi");
+        Permission billUpdate = createPermission("BILL_UPDATE", "Fatura güncelleme yetkisi");
+        Permission billDetailCreate = createPermission("BILL_DETAIL_CREATE", "Fatura detayı oluşturma yetkisi");
+        Permission billDetailRead = createPermission("BILL_DETAIL_READ", "Fatura detayı okuma yetkisi");
+
+        // ROLE permissions
+        Permission roleCreate = createPermission("ROLE_CREATE", "Rol oluşturma yetkisi");
+        Permission roleRead = createPermission("ROLE_READ", "Rol okuma yetkisi");
+        Permission roleUpdate = createPermission("ROLE_UPDATE", "Rol güncelleme yetkisi");
+        Permission roleDelete = createPermission("ROLE_DELETE", "Rol silme yetkisi");
+
+        // PERMISSION permissions
+        Permission permissionRead = createPermission("PERMISSION_READ", "Yetki okuma yetkisi");
+        Permission permissionAssign = createPermission("PERMISSION_ASSIGN", "Yetki atama yetkisi");
+
+        // UTILITY METER permissions
+        Permission utilityMeterCreate = createPermission("UTILITY_METER_CREATE", "Sayaç oluşturma yetkisi");
+        Permission utilityMeterRead = createPermission("UTILITY_METER_READ", "Sayaç okuma yetkisi");
+        Permission utilityMeterUpdate = createPermission("UTILITY_METER_UPDATE", "Sayaç güncelleme yetkisi");
+
+        // USER rolü için temel yetkiler
         Set<Permission> userPermissions = new HashSet<>();
-        userPermissions.add(viewProfile);
-        userPermissions.add(editProfile);
-        userPermissions.add(viewInvoice);
-        userPermissions.add(payInvoice);
-        userPermissions.add(openDoor);
+        userPermissions.add(loginUser);
+        userPermissions.add(registerUser);
+        userPermissions.add(propertyRead);
+        userPermissions.add(billRead);
+        userPermissions.add(billDetailRead);
+        userPermissions.add(utilityMeterRead);
 
+        // ADMIN rolü için tüm yetkiler
+        Set<Permission> adminPermissions = new HashSet<>();
+        adminPermissions.addAll(permissionRepository.findAll()); // Tüm permission'ları ekle
+
+        // Rolleri oluştur
         Role userRole = Role.builder()
                 .name("USER")
                 .description("Standart kullanıcı rolü")
                 .permissions(userPermissions)
                 .build();
-
-        // ADMIN rolü
-        Set<Permission> adminPermissions = new HashSet<>(userPermissions);
-        adminPermissions.add(manageUsers);
-        adminPermissions.add(manageRoles);
-        adminPermissions.add(manageInvoices);
 
         Role adminRole = Role.builder()
                 .name("ADMIN")
